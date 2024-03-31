@@ -6,6 +6,9 @@ inputs:
     description: "The emoji related to this repo"
     required: false
     default: ":question:"
+  slack-webhook-url:
+    description: 'The Slack webhook URL'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -29,5 +32,5 @@ runs:
           }
         }
       ]
-    }' ${{ secrets.SLACK_WEBHOOK_COMMITS }}
+    }' ${{ inputs.slack-webhook-url }}
   shell: bash
