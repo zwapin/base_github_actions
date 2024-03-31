@@ -1,0 +1,36 @@
+# ./github/actions/my-action/action.yml
+name: "Send notification on slack commits channel"
+description: "Sends a custom notification to the internal slack commits channel"
+inputs:
+  emoji:
+    description: "The emoji related to this repo"
+    required: false
+    default: ":question:"
+  slack-webhook-url:
+    description: 'The Slack webhook URL'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Send commit update on commits channel with curl
+      run: |
+        curl -X POST -H 'Content-type: application/json' --data '{
+          "text": "New commit on *${{ github.repository }}* by *${{ github.actor }}* !",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "${{ inputs.emoji }} *${{ github.actor }}* pushed a new commit on *${{ github.repository }}*: ${{ github.event.head_commit.message }}"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "Go to: <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|repository> or <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|action>"
+              }
+            }
+          ]
+        }' ${{ inputs.slack-webhook-url }}
+      shell: bash
