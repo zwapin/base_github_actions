@@ -14,6 +14,7 @@ runs:
   steps:
     - name: Send commit update on commits channel with curl
       run: |
+        branch_name="${GITHUB_REF#refs/heads/}"
         curl -X POST -H 'Content-type: application/json' --data '{
           "text": "New commit on ${{ github.repository }} by ${{ github.actor }}!",
           "blocks": [
@@ -21,7 +22,7 @@ runs:
               "type": "section",
               "text": {
                 "type": "mrkdwn",
-                "text": "${{ inputs.emoji }} *${{ github.actor }}* pushed a new commit on *${{ github.repository }}*: ${{ github.event.head_commit.message }}"
+                "text": "${{ inputs.emoji }} *${{ github.actor }}* pushed a new commit on *${{ github.repository }}* (branch: '"$branch_name"'): ${{ github.event.head_commit.message }}"
               }
             },
             {
