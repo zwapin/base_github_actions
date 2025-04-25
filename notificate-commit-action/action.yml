@@ -15,23 +15,33 @@ runs:
     - name: Send commit update on commits channel with curl
       run: |
         branch_name="${GITHUB_REF#refs/heads/}"
-        curl -X POST -H 'Content-type: application/json' --data '{
-          "text": "New commit on ${{ github.repository }} by ${{ github.actor }}!",
-          "blocks": [
+        message=$(jq -n \
+        --arg actor "${{ github.actor }}" \
+        --arg repo "${{ github.repository }}" \
+        --arg emoji "${{ inputs.emoji }}" \
+        --arg branch "$branch_name" \
+        --arg commit_msg "${{ github.event.head_commit.message }}" \
+        --arg sha "${{ github.sha }}" \
+        --arg run_id "${{ github.run_id }}" \
+        --arg webhook "${{ inputs.slack-webhook-url }}" \
+        '{
+          text: "New commit on \($repo) by \($actor)!",
+          blocks: [
             {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": "${{ inputs.emoji }} *${{ github.actor }}* pushed a new commit on *${{ github.repository }}* (branch: '"$branch_name"'): ${{ github.event.head_commit.message }}"
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "\($emoji) *\($actor)* pushed a new commit on *\($repo)* (branch: \($branch)): \($commit_msg)"
               }
             },
             {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": "Go to: <https://github.com/${{ github.repository }}|repository> or <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|commit> or <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|action>"
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "Go to: <https://github.com/\($repo)|repository> or <https://github.com/\($repo)/commit/\($sha)|commit> or <https://github.com/\($repo)/actions/runs/\($run_id)|action>"
               }
             }
           ]
-        }' ${{ inputs.slack-webhook-url }}
+        }')
+        curl -X POST -H 'Content-type: application/json' --data "$message" "${{ inputs.slack-webhook-url }}"
       shell: bash
